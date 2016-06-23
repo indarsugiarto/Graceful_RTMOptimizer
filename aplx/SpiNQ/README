@@ -1,0 +1,10 @@
+Real-time Performance Optimization on SpiNNaker
+===============================================
+Author: Indar Sugiarto <indar.sugiarto@manchester.ac.uk, indar.sugiarto@gmail.com>
+(c) University of Manchester
+
+
+How does it work?
+-----------------
+It uses Q-Learning. It runs as an addition to the supervisor program.
+
