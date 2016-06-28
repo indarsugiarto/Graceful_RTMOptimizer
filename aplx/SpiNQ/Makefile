@@ -87,6 +87,7 @@ else
 	$(OC) --bin --output $(APP).bin $(APP).elf
 endif
 	$(SPINN_TOOLS)/mkaplx $(BUILD_DIR)$(APP).elf | $(CAT) - $(BUILD_DIR)$(APP).bin > $(BUILD_DIR)$(APP).aplx
+	@$(MKDIR) $(OUTPUT_DIR)
 	@$(CP) $(BUILD_DIR)$(APP).aplx $(OUTPUT_DIR)
 	@$(LS) $(OUTPUT_DIR)$(APP).aplx
 

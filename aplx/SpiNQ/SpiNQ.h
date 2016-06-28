@@ -12,5 +12,20 @@
 
 #include "stdspinapi.h"
 
+#define N_FREQ_ITEM		25
+#define	N_STATES		N_FREQ_ITEM
+
+// Q-table contains basically integer values
+typedef struct StAct
+{
+	int Qval;
+	int action[N_STATES];	// it can go anywhere, including stay in the same state?
+} StAct_t;
+
+StAct_t Q[N_STATES][N_STATES];
+
+
+// forward declarations
+int maxQVal(StAct_t s);		// get the maximum Q-value at state-s
 
 #endif
