@@ -22,9 +22,7 @@
 void reset_timer2(uint _time, uint null);	// Indar: add this
 //void configure_timer2 (uint time);
 void terminate_timer2 (void);
-void timer1_timeout(uint tick, uint arg1);
 INT_HANDLER isr_for_timer2 ();
-INT_HANDLER coba_slow_timer_int();
 
 static uint timer2_tick;			// Indar: add this
 static uint ticks2;
@@ -37,57 +35,35 @@ uint iLoad;
 
 // general/global parameters
 #define REAL						accum
-#define REAL_CONST(x)				x##k
-#define DEF_DELAY_VAL				1000	// used mainly for io_printf
-#define DEF_MY_APP_ID				255
-#define DEBUG_LEVEL					1		// 0 = no_debug, 1 = intermediate, 2 = full debug info
+#define REAL_CONST(x)				(x##k)
 
 //#define REPORT_TIMER_TICK_PERIOD_US	1000000	// to get 1s resolution in FREQ_REF_200MHZ
 #define REPORT_TIMER_TICK_PERIOD_US	100000	// to get 0.1s resolution in FREQ_REF_200MHZ
 #define FREQ_REF_200MHZ				200
 
 // priority setup
-#define SCP_PRIORITY_VAL			0
-#define APP_PRIORITY_VAL			1
-#define LOW_PRIORITY_VAL			2
-#define TEMP_TIMER_PRIORITY_VAL		3
-#define NON_CRITICAL_PRIORITY_VAL	3
-#define LOWEST_PRIORITY_VAL			4		// I found from In spin1_api_params.h I found this: #define NUM_PRIORITIES    5
-//#define IDLE_PRIORITY_VAL			NON_CRITICAL_PRIORITY_VAL
-#define IDLE_PRIORITY_VAL			LOWEST_PRIORITY_VAL
+#define PRIORITY_MCPL               -1
+#define PRIORITY_SDP                0
+#define PRIORITY_TIMER              1
+#define PRIORITY_NORMAL             2
+#define PRIORITY_LOW                3
+#define PRIORITY_LOWEST             4   // I found from In spin1_api_params.h I found this: #define NUM_PRIORITIES    5
+#define PRIORITY_IDLE               PRIORITY_LOWEST
 
 
 // SDP-related parameters
-#define DEF_GENERIC_IPTAG			2		// remember to put this value in ybug
-#define DEF_GENERIC_UDP_PORT		20000
-#define DEF_REPORT_IPTAG			3
-#define DEF_REPORT_PORT				20001
-#define DEF_ERR_INFO_TAG			4
-#define DEF_ERR_INFO_PORT			20002
-#define DEF_SPINN_SDP_PORT			7		// port-7 has a special purpose, usually related with ETH
+#define SDP_IPTAG_REPORT			1
+#define UDP_PORT_REPORT				20001
+#define SDP_IPTAG_GENERIC			2		// remember to put this value in ybug
+#define UDP_PORT_GENERIC			20002
+#define SDP_IPTAG_ERR_INFO			3
+#define UDP_PORT_ERR_INFO			20003
 
-#define DEF_TIMEOUT					10		// as recommended
-#define HOST_SEND_TERMINATE			0xFFFF
-#define SPINN_SEND_TEMP				1
-#define HOST_SET_CHANGE_PLL			2
-#define HOST_REQ_REVERT_PLL			3
-#define HOST_SET_FREQ_VALUE			4
-#define HOST_REQ_FREQ_VALUE			5
-#define SPINN_SEND_IDLE_CNTR		6
-#define HOST_SEND_START_REPORT		7
-#define HOST_SEND_STOP_REPORT		8
-#define HOST_REQ_CPU_MAP			9
-#define SPINN_SEND_REPORT			10		// contains both temperature and idle counter
-#define HOST_REQ_DISABLE_CPU		11
-#define HOST_REQ_ENABLE_CPU			12
-#define HOST_REQ_ACTIVE_CORES		13
-#define HOST_REQ_TO_DEACTIVATE_CORE	14
-#define HOST_REQ_TO_ACTIVATE_CORE	15
+#define SDP_CONFIG_PORT				7		// port-7 has a special purpose, usually related with ETH
+
+#define SDP_TIMEOUT					10		// as recommended
 
 // related with frequency scalling
-#define PLL_ORIGINAL_TAG			0
-#define PLL_RUN_EXPERIMENT_TAG		1
-#define DESIRED_FREQ				50
 #define lnMemTable					93
 #define wdMemTable					3
 // memTable format: freq, MS, NS --> with default dv = 2, so that we don't have
@@ -189,13 +165,10 @@ uchar memTable[lnMemTable][wdMemTable] = {
 };
 
 /* global variables */
-uint myChipID;
 uint myCoreID;
-uchar myPhysicalCore;
-sdp_msg_t report;							// for other parameters report
-sdp_msg_t replyMsg;
-uint szReport;
-uint szHeaderOnly;
+uchar myPhyCore;
+sdp_msg_t reportMsg;						// will be sent via SDP_IPTAG_REPORT
+sdp_msg_t debugMsg;							// will be sent via SDP_IPTAG_GENERIC
 
 // reading temperature sensors
 uint tempVal[3];							// there are 3 sensors in each chip
@@ -204,31 +177,27 @@ uint myOwnIdleCntr;							// since my flag in r25 is alway on, it gives me ALWAY
 
 // PLL and frequency related:
 uint _r20, _r21, _r24;						// the original value of r20, r21, and r24
-uint r20, r21, r24, r25;							// the current value of r20, r21 and r24 during *this* experiment
-uint _freq;
+uint r20, r21, r24, r25;					// the current value of r20, r21 and r24 during *this* experiment
+uint _freq;									// ref/original frequency
 volatile uint _idleCntr;
-volatile uint bRptStreamEnable;
 /*-------------------------------------------------------------------------------------------*/
 
 // function prototypes
 void readTemp(uint ticks, uint arg2);
-void readSCP(uint mailbox, uint port);
-void setupTimer(uint periodT1, uint periodT2);
 void getFreqParams(uint f, uint *ms, uint *ns);
 void changeFreq(uint f, uint replyCode);					// we use uchar to limit the frequency to 255
-void changePLL(uint flag, uint replyCode);
+void changePLL(uint flag);
 REAL getFreq(uchar sel, uchar dv);
-void readSpinFreqReg(uint arg0, uint arg1);
 uint readSpinFreqVal();
-void terminateProfiler(uint arg0, uint arg1);
-void sendReply(uint replyCode, uint seq);
 void idle(uint arg0, uint arg1);
 void updateReport(uint tick, uint arg1);
 void disableCPU(uint virtCoreID, uint none);
 void enableCPU(uint virtCoreID, uint none);
+void setupTimer(uint periodT1, uint periodT2);
 
-
+// initProfiler will set timer-2 and PLL
 void initProfiler();
+void terminateProfiler();
 
 #endif // PROFILER_H
 
