@@ -1,5 +1,4 @@
 #include "qobserver.h"
-#include "ui_qobserver.h"
 
 #include <QDebug>
 

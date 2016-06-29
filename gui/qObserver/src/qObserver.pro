@@ -18,5 +18,3 @@ SOURCES += main.cpp\
 
 HEADERS  += qobserver.h \
     csdp.h
-
-FORMS    +=

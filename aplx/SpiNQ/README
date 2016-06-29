@@ -8,3 +8,7 @@ How does it work?
 -----------------
 It uses Q-Learning. It runs as an addition to the supervisor program.
 
+How to define next state? Can it go anywhere, including stay in the same state?
+Or it can only go up, down or stay? --> Let's try this one!
+
+

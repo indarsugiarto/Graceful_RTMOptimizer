@@ -29,6 +29,7 @@ sdp_msg_t debugMsg;				// in python, this will be handled by QtNetwork.QUdpSocke
 void initSDP();
 void initRouter();
 void initIPTag();
+void initCallback();
 
 void hDMADone(uint tid, uint tag);
 void hTimer(uint tick, uint Unused);
