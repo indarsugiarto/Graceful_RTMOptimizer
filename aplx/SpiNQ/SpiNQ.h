@@ -11,6 +11,7 @@
 //#define USE_SPIN5
 
 #include "stdspinapi.h"
+#include "profiler.h"
 
 #define N_FREQ_ITEM		25
 #define	N_STATES		N_FREQ_ITEM

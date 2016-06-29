@@ -7,7 +7,8 @@ SOURCES += \
     SpiNQ.c \
     main.c \
     eventhandler.c \
-    init.c
+    init.c \
+    profiler.c
 
 INCLUDEPATH += /opt/spinnaker_tools_134/include
 
@@ -17,4 +18,5 @@ DISTFILES += \
 
 HEADERS += \
     SpiNQ.h \
-    stdspinapi.h
+    stdspinapi.h \
+    profiler.h

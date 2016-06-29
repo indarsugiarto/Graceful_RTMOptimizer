@@ -26,3 +26,8 @@ void initRouter()
 
 }
 
+// initProfiler: use Timer-2 and change PLL
+void initProfiler()
+{
+
+}
