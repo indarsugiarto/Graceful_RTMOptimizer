@@ -10,8 +10,7 @@
  * CPUs use PLL1
  */
 #include <spin1_api.h>
-#include <stdfix.h>
-#include <cmath>
+#include "stdspinapi.h"
 
 /*---------------------------- regarding Timer 2 --------------------------------*/
 // -----------------------
@@ -19,56 +18,30 @@
 // -----------------------
 #define TIMER2_SLOT		   8		// Indar: similar to TIMER2_PRIORITY, which must be > 7, according to current spin1_api.h
 //void update_VIC (void);
-void reset_timer2(uint _time, uint null);	// Indar: add this
-//void configure_timer2 (uint time);
+void setupTimer2(uint periodT2, callback_t cback);
+void reset_timer2(uint _time);		// Indar: add this
 void terminate_timer2 (void);
 INT_HANDLER isr_for_timer2 ();
 
-static uint timer2_tick;			// Indar: add this
-static uint ticks2;
+static uint timer2_tick;			// Indar: add this, will be used internally
+static uint ticks2;					// This will apparent to user, not timer2_tick
 static uint timer_tick;  	        // timer tick period
-uint iLoad;
-
+uint iLoad;							// helper variable, to load the counter
+callback_t cbackTimer2;				// callback for timer-2
 /*---------------------------- regarding Timer 2 --------------------------------*/
 /*-------------------------------------------------------------------------------*/
 
 
-// general/global parameters
-#define REAL						accum
-#define REAL_CONST(x)				(x##k)
-
 //#define REPORT_TIMER_TICK_PERIOD_US	1000000	// to get 1s resolution in FREQ_REF_200MHZ
 #define REPORT_TIMER_TICK_PERIOD_US	100000	// to get 0.1s resolution in FREQ_REF_200MHZ
 #define FREQ_REF_200MHZ				200
-
-// priority setup
-#define PRIORITY_MCPL               -1
-#define PRIORITY_SDP                0
-#define PRIORITY_TIMER              1
-#define PRIORITY_NORMAL             2
-#define PRIORITY_LOW                3
-#define PRIORITY_LOWEST             4   // I found from In spin1_api_params.h I found this: #define NUM_PRIORITIES    5
-#define PRIORITY_IDLE               PRIORITY_LOWEST
-
-
-// SDP-related parameters
-#define SDP_IPTAG_REPORT			1
-#define UDP_PORT_REPORT				20001
-#define SDP_IPTAG_GENERIC			2		// remember to put this value in ybug
-#define UDP_PORT_GENERIC			20002
-#define SDP_IPTAG_ERR_INFO			3
-#define UDP_PORT_ERR_INFO			20003
-
-#define SDP_CONFIG_PORT				7		// port-7 has a special purpose, usually related with ETH
-
-#define SDP_TIMEOUT					10		// as recommended
 
 // related with frequency scalling
 #define lnMemTable					93
 #define wdMemTable					3
 // memTable format: freq, MS, NS --> with default dv = 2, so that we don't have
 // to modify r24
-uchar memTable[lnMemTable][wdMemTable] = {
+static uchar memTable[lnMemTable][wdMemTable] = {
 {10,1,2},
 {11,5,11},
 {12,5,12},
@@ -183,17 +156,16 @@ volatile uint _idleCntr;
 /*-------------------------------------------------------------------------------------------*/
 
 // function prototypes
-void readTemp(uint ticks, uint arg2);
+void readTemp();
+
 void getFreqParams(uint f, uint *ms, uint *ns);
 void changeFreq(uint f, uint replyCode);					// we use uchar to limit the frequency to 255
 void changePLL(uint flag);
-REAL getFreq(uchar sel, uchar dv);
 uint readSpinFreqVal();
+
 void idle(uint arg0, uint arg1);
-void updateReport(uint tick, uint arg1);
 void disableCPU(uint virtCoreID, uint none);
 void enableCPU(uint virtCoreID, uint none);
-void setupTimer(uint periodT1, uint periodT2);
 
 // initProfiler will set timer-2 and PLL
 void initProfiler();

@@ -25,7 +25,7 @@ SCRIPT = $(SPINN_DIRS)/lib/sark.lnk
 
 # List of objects making up the application. If there are other files
 # in the application, add their object file names to this variable.
-OBJECTS = $(APP).o init.o eventhandler.o main.o
+OBJECTS = $(APP).o init.o eventhandler.o profiler.o util.o timer2_isr.o main.o
 
 ifndef GNUBIN
     GNUBIN := /opt/arm-2013.05/bin
@@ -120,6 +120,18 @@ $(BUILD_DIR)init.o: init.c $(APP).h
 	$(CC) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)eventhandler.o: eventhandler.c $(APP).h
+	@$(MKDIR) $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)profiler.o: profiler.c profiler.h $(APP).h
+	@$(MKDIR) $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)timer2_isr.o: timer2_isr.c profiler.h $(APP).h
+	@$(MKDIR) $(BUILD_DIR)
+	$(CA) $(CFLAGS) $< -o $@
+
+$(BUILD_DIR)util.o: util.c $(APP).h
 	@$(MKDIR) $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 

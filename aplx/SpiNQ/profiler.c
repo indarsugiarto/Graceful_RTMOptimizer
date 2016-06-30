@@ -38,7 +38,7 @@ void terminateProfiler()
 #define MY_CODE			1
 #define PATRICK_CODE	2
 #define READING_VERSION	MY_CODE	// 1 = mine, 2 = patrick's
-void readTemp(uint ticks, uint arg2)
+void readTemp()
 {
 #if (READING_VERSION==1)
 	uint i, done, S[] = {SC_TS0, SC_TS1, SC_TS2};
@@ -258,182 +258,29 @@ void enableCPU(uint virtCoreID, uint none)
 
 /*__________________________________________________ Other Utilities ____*/
 
+/*-------------- Here are my extensions on Timer2 ----------------*/
 
-void updateReport(uint tick, uint arg1)
+// Using interrupt example
+void setupTimer2(uint periodT2, callback_t cback)
 {
-	// get the temperature sensor values in val[]
-	readTemp(tick, arg1);
-	//report.seq = (ushort)myChipID;
-	report.seq = (ushort)_freq;
-	report.arg1 = tempVal[0];
-	report.arg2 = tempVal[1];
-	report.arg3 = tempVal[2];
-	// get the idle counters
-	cpuIdleCntr[myPhysicalCore] = myOwnIdleCntr;	// replace the "always zero counter" that runs on myself
-	sark_mem_cpy((void *)report.data, (void *)cpuIdleCntr, 18*sizeof(uint));
-	// clear the idle counters and play with the LEDs
-	for(_idleCntr=0; _idleCntr<18; _idleCntr++)
-		cpuIdleCntr[_idleCntr] = 0;
-	myOwnIdleCntr = 0;
-
-	report.cmd_rc = SPINN_SEND_REPORT;
-	report.length = szReport;
-	if(bRptStreamEnable)
-		spin1_send_sdp_msg(&report, DEF_TIMEOUT);
-	//io_printf(IO_BUF, "Sending report using iptag-%u on port-%u...\n", report.tag, DEF_REPORT_PORT);
-
-}
-
-void setupTimer(uint periodT1, uint periodT2)
-{
-	// for Timer1
-	spin1_set_timer_tick(periodT1);
-	//spin1_callback_on(TIMER_TICK, updateReport, NON_CRITICAL_PRIORITY_VAL);
-	spin1_callback_on(TIMER_TICK, timer1_timeout, NON_CRITICAL_PRIORITY_VAL);
-
-	// Using interrupt example
-	ticks2 = 0;
+	cbackTimer2 = cback;
+	ticks2 = 0;							// start from 0, will be used by user
 	sark_vic_set (TIMER2_SLOT, TIMER2_INT, 1, isr_for_timer2);
-	tc[T2_CONTROL] = 0xe2;			// Set up count-down mode
-	reset_timer2(periodT2, 0);
-
-
-	/*
-	update_VIC();
-	cpu_freq = 200;						// This is initial value, might be change during run time
-	set_timer2_tick(periodT2);			// this only assign the value of timer2_tick to something
-	//configure_timer2(timer2_tick)
-	{
-	  // do not enable yet!
-	  tc[T2_CONTROL] = 0;
-	  tc[T2_INT_CLR] = 1;
-	  tc[T2_LOAD] = cpu_freq * timer2_tick;
-	  tc[T2_BG_LOAD] = cpu_freq * timer2_tick;
-	}
-	tc[T2_CONTROL] = 0xe2;			// 0xe2 = 1110 0010 = enable with periodic interrupt in 32-bit wrapping mode
-	ticks2 = 0;							// actually, it's a general purpose variable
-	*/
-
-
-	// apa ini?
-	sark_vic_set(TIMER2_SLOT + 1, SLOW_CLK_INT, 1, coba_slow_timer_int);
+	tc[T2_CONTROL] = 0xe2;				// Set up count-down mode
+	reset_timer2(periodT2);				// load the counter circuit with value
 }
 
-void c_main(void)
-{
-	// test...
-	sv->utmp0 = 0;
-
-	setupTimer(REPORT_TIMER_TICK_PERIOD_US, REPORT_TIMER_TICK_PERIOD_US);
-
-	/*-------------------------------- Regarding Timer 2 -------------------------------------*/
-	terminate_timer2();
-	/*----------------------------------------------------------------------------------------*/
-}
-
-
-/*-------------------------------- Here are my extensions on Timer2 ---------------------------------*/
-
-/****f* spin1_isr.c/timer2_isr
-*
-* SUMMARY
-*  This interrupt service routine is called upon countdown of the processor's
-*  primary timer to zero. In response, a callback is scheduled.
-*
-* SYNOPSIS
-*  INT_HANDLER timer2_isr()
-*
-* SOURCE
-*/
-INT_HANDLER isr_for_timer2 ()
-{
-	// Clear timer interrupt
-	//tc[T2_INT_CLR] = 1;
-	tc[T2_INT_CLR] = (uint) tc;			// Clear interrupt in timer
-
-	// Increment simulation "time" and call the "longer" handler
-
-	ticks2++;
-	//spin1_schedule_callback(timer2_timeout, ticks2, 0, NON_CRITICAL_PRIORITY_VAL);
-	spin1_schedule_callback(updateReport, ticks2, 0, NON_CRITICAL_PRIORITY_VAL);
-	//updateReport(ticks2, 0);
-	//sark_led_set (LED_FLIP (1));			// Flip a LED
-
-	// Ack VIC
-	//vic[VIC_VADDR] = 1;		// Tell VIC we're done
-	vic[VIC_VADDR] = (uint) vic;			// Tell VIC we're done
-}
-
-/*
-void update_VIC (void)
-{
-	sark_vic_set (TIMER2_PRIORITY, TIMER2_INT, 1, isr_for_timer2);	// Set VIC slot 0
-	return;
-	// interrupt service routine
-#ifdef __GNUC__
-	typedef void (*isr_t) (void);
-#else
-	typedef __irq void (*isr_t) (void);
-#endif
-	// ------------------------------------------------------------------------
-	// internal variables -- not visible in the API
-	// ------------------------------------------------------------------------
-	// VIC vector tables
-	static volatile isr_t * const vic_vectors  = (isr_t *) (VIC_BASE + 0x100);
-	static volatile uint * const vic_controls = (uint *) (VIC_BASE + 0x200);
-
-	// ------------------------------------------------------------------------
-
-  // disable the relevant interrupts while configuring the VIC
-  uint int_select = (1 << TIMER2_INT);
-  //vic[VIC_DISABLE] = vic[VIC_DISABLE] | int_select;
-  vic[VIC_DISABLE] = int_select;
-
-  // Move the SARK interrupt to chosen slot
-  vic_controls[sark_vec->sark_slot] = 0;	  // Disable previous slot
-
-  //vic_vectors[SARK_PRIORITY]  = sark_int_han;
-  //vic_controls[SARK_PRIORITY] = 0x20 | CPU_INT;
-
-	// Configure Timer2 interrupts
-	// vic_controls is defined in spin1_api_params.h as:
-	//		static volatile uint * const vic_controls = (uint *) (VIC_BASE + 0x200);
-  vic_vectors[TIMER2_PRIORITY] = isr_for_timer2;
-  vic_controls[TIMER2_PRIORITY] = 0x20 | TIMER2_INT;
-
-  // then enable VIC
-  //vic[VIC_ENABLE] = vic[VIC_ENABLE] | int_select;
-  vic[VIC_ENABLE] = int_select;
-}
-
-/*
-*******/
-
-// Indar: add this
-void reset_timer2 (uint _time, uint null)
+// reset_timer2() can be used to force timer-2 to start from different value
+void reset_timer2 (uint _time)
 {
   timer2_tick = _time;
 
-  /*
-  // (REAL)timer2_tick will produce negative value!
-  REAL fRatio = (REAL)_freq / (REAL)FREQ_REF_200MHZ;
-  io_printf(IO_BUF, "fRatio = %k\n", fRatio);
-  io_printf(IO_BUF, "(REAL)timer2_tick = %k, (REAL)FREQ_REF_200MHZ = %k\n", (REAL)timer2_tick, (REAL)FREQ_REF_200MHZ);
+  // try to compensate freq not using sv->cpu_clk
+  uint freq = readSpinFreqVal();
+  iLoad = freq * timer2_tick;
 
-  fRatio = (REAL)timer2_tick * (REAL)FREQ_REF_200MHZ;
-  io_printf(IO_BUF, "fRatio = %k\n", fRatio);
-  iLoad = (uint)(fRatio);
-  io_printf(IO_BUF, "iLoad = %u\n", iLoad);
-  //iLoad = _freq * timer2_tick;
-  */
-
-
-  _freq = readSpinFreqVal();
-  // io_printf(IO_STD, "freq = %u\n", _freq);
-  // try to compensate freq under 50MHz
-  iLoad = _freq * timer2_tick;
-  tc[T2_LOAD] = iLoad;		// Load time in microsecs
-  // io_printf(IO_STD, "iLoad = %u\n", iLoad);
+  // Load time in microsecs
+  tc[T2_LOAD] = iLoad;
 }
 
 /* terminate_timer2() is modified from clean_up() and spin1_exit() */

@@ -6,11 +6,20 @@ qObserver::qObserver(QWidget *parent) :
 	QWidget(parent)
 {
 	setupUi();
+	qTesterWidget.show();
+	qTesterWidget.setGeometry(x()+width()+5, y(), qTesterWidget.width(), qTesterWidget.height());
 }
 
 qObserver::~qObserver()
 {
 	delete Q;
+}
+
+void qObserver::closeEvent(QCloseEvent *e)
+{
+	if(qTesterWidget.isVisible())
+		qTesterWidget.close();
+	e->accept();
 }
 
 void qObserver::setupUi()

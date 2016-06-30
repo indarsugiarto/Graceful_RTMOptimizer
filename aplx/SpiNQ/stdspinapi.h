@@ -6,33 +6,44 @@
 
 #include <spin1_api.h>
 
-#define TIMER_TICK_PERIOD_US 	1000000
-#define PRIORITY_TIMER			3
-#define PRIORITY_PROCESSING		2
-#define PRIORITY_SDP			1
+#define TIMER1_TICK_PERIOD_US 	1000000
+#define TIMER2_TICK_PERIOD_US	100000
+
 #define PRIORITY_MCPL			-1
-#define PRIORITY_DMA			0
+#define PRIORITY_SDP			0
+#define PRIORITY_DMA			1
+#define PRIORITY_TIMER			2
+#define PRIORITY_PROCESSING		3
+#define PRIORITY_LOWER			4
+#define PRIORITY_IDLE			PRIORITY_LOWER
 
-#define SDP_TAG_REPLY			1
-#define SDP_UDP_REPLY_PORT		20000
+// SDP-related parameters
+#define SDP_IPTAG_REPORT		1
+#define SDP_UDP_PORT_REPORT		20001
+#define SDP_IPTAG_GENERIC		2
+#define SDP_UDP_PORT_GENERIC	20002
+#define SDP_IPTAG_ERR_DEBUG		3
+#define SDP_UDP_PORT_ERR_DEBUG	20003
 #define SDP_HOST_IP				0x02F0A8C0	// 192.168.240.2, dibalik!
-#define SDP_TAG_RESULT			2
-#define SDP_UDP_RESULT_PORT		20001
-#define SDP_TAG_DEBUG           3
-#define SDP_UDP_DEBUG_PORT      20002
 
-sdp_msg_t reportMsg;			// in python, this will be handled in blocking mode (via native socket)
-sdp_msg_t resultMsg;			// in python, this will be handled by QtNetwork.QUdpSocket
-sdp_msg_t debugMsg;				// in python, this will be handled by QtNetwork.QUdpSocket
+#define SDP_CONFIG_PORT			7		// port-7 has a special purpose, usually related with ETH
+
+#define SDP_TIMEOUT				10		// as recommended
+
+sdp_msg_t reportMsg;			// for sending Q-table
+sdp_msg_t genericMsg;			// for sending measurement
+sdp_msg_t debugMsg;				//
 
 // forward declaration
 void initSDP();
 void initRouter();
 void initIPTag();
 void initCallback();
+void initTimer();
 
 void hDMADone(uint tid, uint tag);
-void hTimer(uint tick, uint Unused);
+void hTimer1(uint tick, uint Unused);
+void hTimer2(uint tick, uint Unused);
 void hSDP(uint mBox, uint port);
 void hMCPL(uint key, uint payload);
 

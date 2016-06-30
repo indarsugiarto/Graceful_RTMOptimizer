@@ -10,12 +10,16 @@
 #define USE_SPIN3
 //#define USE_SPIN5
 
+#include <stdfix.h>
 #include "stdspinapi.h"
 #include "profiler.h"
 
-#define N_FREQ_ITEM		25
-#define	N_STATES		N_FREQ_ITEM
-#define N_ACTION        3
+// general/global parameters
+#define REAL						accum
+#define REAL_CONST(x)				(x##k)
+#define N_FREQ_ITEM					25
+#define	N_STATES					N_FREQ_ITEM
+#define N_ACTION					3
 
 // Q-table contains basically integer values
 /*
@@ -37,13 +41,31 @@ typedef struct st
     act_t action;   //
 } st_t;
 
-static short Q[N_STATES][N_STATES] = {0};
+// core Q-learning components
+static uint Q[N_STATES][N_STATES] = {0};
 uchar currentState[2];
+
+// state parameters/measurements
+uint currentFreq;
+uint currentTempInt;
+REAL currentTempReal;
+uint rewardVal;
+
 
 // forward declarations
 // int maxQVal(StAct_t s);		// get the maximum Q-value at state-s
 void maxQVal(short maxVal[N_ACTION], uchar xQ, uchar yQ);
 void updateQ(uint state, uint action);
 short getReward();
+
+// misc functions
+void initStates();
+void collectMeasurement();
+uint computeReward();
+void updateReport(uint arg0, uint arg1);
+
+// helper functins
+REAL getRealTemp();				// get a "Real" temperature in Celcius
+void readPLL(char *stream);
 
 #endif

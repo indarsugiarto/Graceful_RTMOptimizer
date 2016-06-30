@@ -8,7 +8,9 @@ SOURCES += \
     main.c \
     eventhandler.c \
     init.c \
-    profiler.c
+    profiler.c \
+    timer2_isr.c \
+    util.c
 
 INCLUDEPATH += /opt/spinnaker_tools_134/include
 

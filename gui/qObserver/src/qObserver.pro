@@ -14,7 +14,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         qobserver.cpp \
-    csdp.cpp
+    csdp.cpp \
+    qtester.cpp
 
 HEADERS  += qobserver.h \
-    csdp.h
+    csdp.h \
+    qtester.h
+
+FORMS += \
+    qtester.ui

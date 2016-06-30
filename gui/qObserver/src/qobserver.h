@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QLabel>
+#include <QCloseEvent>
+
+#include "qtester.h"
 
 #define N_STATES	16
 
@@ -24,6 +27,11 @@ private:
 	QVector <QLineEdit *> *Q;
 	QLineEdit temp, freq, util, perf, rewd;
 	QLabel lTemp, lFreq, lCPU, lPerf, lRewd;
+
+	QTester qTesterWidget;
+
+protected:
+	void closeEvent(QCloseEvent *e);
 };
 
 #endif // QOBSERVER_H
