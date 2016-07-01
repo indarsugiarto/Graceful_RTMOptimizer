@@ -20,7 +20,9 @@ public:
 public slots:
 	void pbSetClicked();
 	void pbGoClicked();
+	void pbPLLClicked();
 	void populateChips(int spinn = 0);
+	void sendCmd(cmd_hdr_t cmd);
 
 private:
 	// variables

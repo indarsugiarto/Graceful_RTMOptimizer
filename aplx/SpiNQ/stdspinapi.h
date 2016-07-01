@@ -6,8 +6,8 @@
 
 #include <spin1_api.h>
 
-#define TIMER1_TICK_PERIOD_US 	1000000
-#define TIMER2_TICK_PERIOD_US	100000
+#define TIMER1_TICK_PERIOD_US 	500000
+#define TIMER2_TICK_PERIOD_US	1000000
 
 #define PRIORITY_MCPL			-1
 #define PRIORITY_SDP			0
@@ -34,6 +34,9 @@
 #define SDP_CMD_SET_FREQ		0xf2e0
 #define SDP_CMD_GOTO_STATE		0x6070
 #define SDP_CMD_SEND_CPU_MAP	0xaaaa
+#define SDP_CMD_REPORT_PLL		0x1234
+#define SDP_CMD_RUNQ			0x2345
+#define SDP_CMD_STOPQ			0x3456
 
 sdp_msg_t reportMsg;			// for sending Q-table
 sdp_msg_t genericMsg;			// for sending measurement

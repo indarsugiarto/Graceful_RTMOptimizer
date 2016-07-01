@@ -20,6 +20,11 @@ QTester::QTester(QWidget *parent) :
 	// populate chip list
 	populateChips(ui->cbSpin->currentIndex());
 	connect(ui->cbSpin, SIGNAL(currentIndexChanged(int)), this, SLOT(populateChips(int)));
+
+	// GUI-callbacks
+	connect(ui->pbGo, SIGNAL(pressed()), this, SLOT(pbGoClicked()));
+	connect(ui->pbSet, SIGNAL(pressed()), this, SLOT(pbSetClicked()));
+	connect(ui->pbPLL, SIGNAL(pressed()), this, SLOT(pbPLLClicked()));
 }
 
 QTester::~QTester()
@@ -38,12 +43,6 @@ void QTester::populateChips(int spinn)
 // set SpiNNaker frequency
 void QTester::pbSetClicked()
 {
-
-}
-
-// go to specific state
-void QTester::pbGoClicked()
-{
 	quint32 f = ui->cbFreq->currentText().toInt();
 	sdp_hdr_t h;
 	quint16 x = X_CHIPS[ui->cbChip->currentIndex()];
@@ -58,6 +57,44 @@ void QTester::pbGoClicked()
 	c.cmd_rc = SDP_CMD_SET_FREQ;
 	c.seq = f;
 	sendSDP(h, scp(c));
+}
+
+// go to specific state
+void QTester::pbGoClicked()
+{
+
+}
+
+void QTester::pbPLLClicked()
+{
+	// send command to read PLL status
+	quint16 x = X_CHIPS[ui->cbChip->currentIndex()];
+	quint16 y = Y_CHIPS[ui->cbChip->currentIndex()];
+	sdp_hdr_t h;
+	h.flags = 0x07;
+	h.tag = 0;
+	h.srce_addr = 0;
+	h.srce_port = 255;
+	h.dest_addr = (x << 8) + y;
+	h.dest_port = (SDP_CMD_PORT << 5) + ui->sbCore->value();
+	cmd_hdr_t c;
+	c.cmd_rc = SDP_CMD_REPORT_PLL;
+	c.seq = 1;	// 1 = send to IO_STD, 0 = send to IO_BUF
+	sendSDP(h, scp(c));
+}
+
+void QTester::sendCmd(cmd_hdr_t cmd)
+{
+	quint16 x = X_CHIPS[ui->cbChip->currentIndex()];
+	quint16 y = Y_CHIPS[ui->cbChip->currentIndex()];
+	sdp_hdr_t h;
+	h.flags = 0x07;
+	h.tag = 0;
+	h.srce_addr = 0;
+	h.srce_port = 255;
+	h.dest_addr = (x << 8) + y;
+	h.dest_port = (SDP_CMD_PORT << 5) + ui->sbCore->value();
+	sendSDP(h, scp(cmd));
 }
 
 void QTester::sendSDP(sdp_hdr_t h, QByteArray s, QByteArray d)

@@ -24,11 +24,41 @@ typedef struct cmd_hdr		// Command header
   quint32 arg3;
 } cmd_hdr_t;
 
+
+// This is how genericMsg is used for reporting measurement:
+/* format:
+ *		cmd_rc = CPU performance
+ *		seq = clock freqency
+ *		arg1 = tempVal[0]
+ *		arg2 = tempVal[2]
+ *		arg3 = currentTempReal
+ *		data[0:3] = reward value
+ *		data[4:7] = average cpu utilization
+ *		data[8:11] = phycpu_0_idle_cntr
+ *		data[12:15] = phycpu_1_idle_cntr
+ *		... etc
+ * */
+typedef struct qParam
+{
+	quint16 CPUperf;
+	quint16 freq;
+	quint32 tempVal0;
+	quint32 tempVal2;
+	float tempReal;			// Note: stdfix is not supported in host machine!
+	qint32 rewardVal;
+	quint32 avgCPU;
+	quint32 cpuIdle[18];
+} qParam_t;
+
+
 #define N_FREQ_ITEM				16	// from 10 to 250
 #define N_STATES				N_FREQ_ITEM
 #define SDP_CMD_SET_FREQ		0xf2e0
 #define SDP_CMD_GOTO_STATE		0x6070
 #define SDP_CMD_SEND_CPU_MAP	0xaaaa
+#define SDP_CMD_REPORT_PLL		0x1234
+#define SDP_CMD_RUNQ			0x2345
+#define SDP_CMD_STOPQ			0x3456
 
 // SDP-related parameters - Please check its consistency!!!
 #define SDP_IPTAG_REPORT		1

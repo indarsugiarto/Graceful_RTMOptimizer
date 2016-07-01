@@ -17,7 +17,7 @@
 // general/global parameters
 #define REAL						accum
 #define REAL_CONST(x)				(x##k)
-#define N_FREQ_ITEM					25
+#define N_FREQ_ITEM					16
 #define	N_STATES					N_FREQ_ITEM
 #define N_ACTION					3
 
@@ -34,15 +34,19 @@ static uint Q[N_STATES][N_STATES] = {0};
 uchar currentState[2];
 
 // state parameters/measurements
+ushort fList[N_FREQ_ITEM];
 uint CPUperf;				// CPU performance, how to measure it?
 uint currentFreq;
 uint currentTempInt;
 REAL currentTempReal;
-uint currentRewardVal;
+int currentRewardVal;
 // the following will be collected from profiler:
 // uint tempVal[3];
 // uint cpuIdleCntr[18];
 // uint avgCPUidle;
+
+// dummy variable:
+uint tCntr;
 
 // these will control how Q-learning operates:
 uchar isRunning;			// set this value to run or pause Q-learning

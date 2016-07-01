@@ -65,6 +65,7 @@ void initSDP()
 	reportMsg.srce_port = (SDP_CONFIG_PORT << 5) + myCoreID;
 	reportMsg.dest_addr = sv->eth_addr;
 	reportMsg.dest_port = PORT_ETH;
+	reportMsg.length = sizeof(sdp_hdr_t) + sizeof(cmd_hdr_t) + N_STATES*sizeof(uint);
 	// reportMsg.cmd_rc etc depends on what type of report
 
 	// initialize genericMsg for measurement reporting

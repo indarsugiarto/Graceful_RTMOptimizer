@@ -1,4 +1,7 @@
 #include "profiler.h"
+
+extern uint currentFreq;
+
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -20,7 +23,11 @@ void initProfiler()
 
 	// move system AHB and router to PLL-2
 	// PLL-1 will be exclusively used for CPU's clock
-	changePLL(2);
+	changePLL(1);
+	io_printf(IO_STD, "Switch PLL so that all cores use the same source!\n");
+
+	currentFreq = readSpinFreqVal();
+	io_printf(IO_STD, "Current frequency = %d-MHz!\n", currentFreq);
 
 	// initialize idle process and set the callback loop
 	for(uint _idleCntr=0; _idleCntr<18; _idleCntr++)
@@ -123,7 +130,24 @@ void idle(uint arg0, uint arg1)
 
 void computeAvgCPUidle()
 {
-	// TODO: to measure average, we must detect which CPU is in RUN_STATE
+	// at this point idle() is not execute, so it is safe to compute average
+	// NOTE: here is the way to get virtual cpu from physical one:
+	//			sark.virt_cpu = sv->p2v_map[sark.phys_cpu];
+	//		 and here is to get physical from virtual one:
+	//			sark.phys_cpu = sv->v2p_map[sark.virt_cpu];
+
+	uint totalCntr = 0;
+	uchar cntr = 0;
+	for(uchar vCPU=0; vCPU<18; vCPU++) {
+		if(sv->vcpu_base[vCPU].cpu_state < CPU_STATE_IDLE) {
+			totalCntr += cpuIdleCntr[sv->v2p_map[vCPU]];
+			cntr++;
+		}
+	}
+	avgCPUidle = totalCntr / cntr;
+	// then reset counter
+	for(uchar cpu=0; cpu<18; cpu++)
+		cpuIdleCntr[cpu] = 0;
 }
 
 /*____________________________________________ CPU Performance stuffs ___*/
@@ -168,7 +192,7 @@ uint readSpinFreqVal()
 	return f;
 }
 
-void changeFreq(uint f, uint null)
+void changeFreq(uint f)
 {
 	r20 = sc[SC_PLL1];			// clk sources for cores should always from PLL1
 
@@ -199,7 +223,7 @@ void changePLL(uint flag)
 {
 	// set to original value
 	if(flag==0) {
-		changeFreq(_freq, 0);	// set back the original frequency
+		changeFreq(_freq);	// set back the original frequency
 		sc[SC_CLKMUX] = _r24;	// then restore all registers
 		sc[SC_PLL1] = _r20;
 		sc[SC_PLL2] = _r21;

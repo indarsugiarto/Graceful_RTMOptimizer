@@ -11,6 +11,10 @@ void initQ()
 	isRunning = FALSE;
 	isLearning = TRUE;
 
+	// create a list of frequency
+	for(uchar i=0; i<N_FREQ_ITEM; i++)
+		fList[i] = 100 + i*10;
+
 	// let's randomly initialize currentState
 	uchar x = sark_rand() % N_STATES;
 	uchar y = sark_rand() % N_STATES;
@@ -30,6 +34,7 @@ void runQ()
 	//         it runs only if isRunning is true, which can be triggered
 	//         by an "SDP-command" from host-PC
 	if(isRunning == TRUE) {
+	//if(1) {
 		updateQ();
 		// optionally, send the Q-matrix to host
 		sendQReport();
@@ -57,9 +62,23 @@ short getReward()
 
 void updateQ()
 {
-
+	// for debugging:
+	//io_printf(IO_STD, "Q:\n");
+	for(int i=0; i<N_STATES; i++) {
+		for(int j=0; j<N_STATES; j++) {
+			//io_printf(IO_STD, "%d ", Q[i][j]);
+			Q[i][j] = tCntr;
+		}
+		//io_printf(IO_STD, "\n");
+	}
+	tCntr++;
 }
 
+/*---------------------------------------------------------------*/
+/*---------------------------------------------------------------*/
+/*---------------------------------------------------------------*/
+/*---------------------------------------------------------------*/
+/*----------------------- Get Measurements ----------------------*/
 void collectMeasurement()
 {
 	// read frequency
@@ -68,14 +87,17 @@ void collectMeasurement()
 	// read temperatures
 	readTemp();
 
-	// optional: compute real temperature
+	// read average CPU load
+	// computeAvgCPUidle();
 
+	// optional: compute real temperature
+	currentTempReal = getRealTemp();
 }
 
 void computeReward()
 {
 	// TODO: how to compute reward value?
-	currentRewardVal = tempVal[2];
+	currentRewardVal = (avgCPUidle/35) -  tempVal[2];
 }
 
 void computeCPUperf()
@@ -107,11 +129,12 @@ void computeCPUperf()
  * */
 void sendMReport()
 {
+	float t = (float)currentTempReal;
 	genericMsg.cmd_rc = CPUperf;
 	genericMsg.seq = currentFreq;
 	genericMsg.arg1 = tempVal[0];
 	genericMsg.arg2 = tempVal[2];
-	genericMsg.arg3 = currentTempReal;
+	sark_mem_cpy((void *)&genericMsg.arg3, (void *)&t, sizeof(uint));
 	sark_mem_cpy((void *)genericMsg.data, (void *)&currentRewardVal, sizeof(uint));
 	sark_mem_cpy((void *)genericMsg.data + sizeof(uint),
 				 (void *)&avgCPUidle, sizeof(uint));
@@ -121,9 +144,19 @@ void sendMReport()
 	spin1_send_sdp_msg(&genericMsg, SDP_TIMEOUT);
 }
 
+// The mechanism for sending Q-values: using seq as row counter
 void sendQReport()
 {
-
+	// void * should be similar to char *
+	void *ptr = (void *)Q;
+	for(ushort row=0; row<N_STATES; row++) {
+		reportMsg.seq = row;
+		//ptr += row*N_STATES*sizeof(uint);
+		sark_mem_cpy((void *)reportMsg.data, ptr, N_STATES*sizeof(uint));
+		ptr += N_STATES*sizeof(uint);
+		spin1_send_sdp_msg(&reportMsg, SDP_TIMEOUT);
+		sark_delay_us(250);
+	}
 }
 
 /* Since cpuIdleCntr work with physical core, host might

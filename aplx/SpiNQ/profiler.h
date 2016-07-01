@@ -167,7 +167,7 @@ void readTemp();
 
 // frequency-related
 void getFreqParams(uint f, uint *ms, uint *ns);
-void changeFreq(uint f, uint replyCode);					// we use uchar to limit the frequency to 255
+void changeFreq(uint f);					// we use uchar to limit the frequency to 255
 void changePLL(uint flag);
 uint readSpinFreqVal();
 
