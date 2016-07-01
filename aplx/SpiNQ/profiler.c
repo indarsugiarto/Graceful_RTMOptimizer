@@ -1,5 +1,8 @@
 #include "profiler.h"
-
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
 /*-------------------- Initialization & Termination --------------------*/
 // initProfiler: use Timer-2 and change PLL
 void initProfiler()
@@ -20,7 +23,7 @@ void initProfiler()
 	changePLL(2);
 
 	// initialize idle process and set the callback loop
-	for(_idleCntr=0; _idleCntr<18; _idleCntr++)
+	for(uint _idleCntr=0; _idleCntr<18; _idleCntr++)
 		cpuIdleCntr[_idleCntr] = 0;
 	myOwnIdleCntr = 0;
 	spin1_schedule_callback(idle, 0, 0, PRIORITY_IDLE);
@@ -33,6 +36,9 @@ void terminateProfiler()
 }
 
 
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
 /*----------------------- Temperature Measurement -----------------------*/
 // in readTemp(), read the sensors and put the result in tempVal[]
 #define MY_CODE			1
@@ -98,10 +104,16 @@ void readTemp()
 
 /*____________________________________________ Temperature Measurement __*/
 
+
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
 /*----------------------- CPU Performance stuffs ------------------------*/
 
 void idle(uint arg0, uint arg1)
 {
+	uint _idleCntr;
 	r25 = sc[SC_SLEEP];
 	for(_idleCntr=0; _idleCntr<18; _idleCntr++)
 		cpuIdleCntr[_idleCntr] += (r25 >> _idleCntr) & 1;
@@ -109,9 +121,19 @@ void idle(uint arg0, uint arg1)
 	spin1_schedule_callback(idle, 0, 0, PRIORITY_IDLE);
 }
 
+void computeAvgCPUidle()
+{
+	// TODO: to measure average, we must detect which CPU is in RUN_STATE
+}
+
 /*____________________________________________ CPU Performance stuffs ___*/
 
 
+
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
 /*--------------------- Frequency/PLL-related stuffs --------------------*/
 // getFreqParams() read from memTable, the value for ms and ns
 void getFreqParams(uint f, uint *ms, uint *ns)
@@ -212,10 +234,14 @@ void changePLL(uint flag)
 	}
 }
 
-/*______________________________________ Frequency/PLL-related stuffs ___*/
+/*_____________________________________ Frequency/PLL-related stuffs ___*/
 
 
-/*--------------------------- Other Utilities ---------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*-------------------------- Other Utilities ---------------------------*/
 void disableCPU(uint virtCoreID, uint none)
 {
 	uchar pCore = sv->v2p_map[virtCoreID];
@@ -258,7 +284,13 @@ void enableCPU(uint virtCoreID, uint none)
 
 /*__________________________________________________ Other Utilities ____*/
 
-/*-------------- Here are my extensions on Timer2 ----------------*/
+
+
+
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------------------------------------------------------------*/
+/*----------------- Here are my extensions on Timer2 -------------------*/
 
 // Using interrupt example
 void setupTimer2(uint periodT2, callback_t cback)
@@ -273,14 +305,15 @@ void setupTimer2(uint periodT2, callback_t cback)
 // reset_timer2() can be used to force timer-2 to start from different value
 void reset_timer2 (uint _time)
 {
-  timer2_tick = _time;
+	uint iLoad;							// helper variable, to load the counter
+	timer2_tick = _time;
 
-  // try to compensate freq not using sv->cpu_clk
-  uint freq = readSpinFreqVal();
-  iLoad = freq * timer2_tick;
+	// try to compensate freq not using sv->cpu_clk
+	uint freq = readSpinFreqVal();
+	iLoad = freq * timer2_tick;
 
-  // Load time in microsecs
-  tc[T2_LOAD] = iLoad;
+	// Load time in microsecs
+	tc[T2_LOAD] = iLoad;
 }
 
 /* terminate_timer2() is modified from clean_up() and spin1_exit() */

@@ -12,28 +12,29 @@
 #include <spin1_api.h>
 #include "stdspinapi.h"
 
+/*-------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------*/
 /*---------------------------- regarding Timer 2 --------------------------------*/
 // -----------------------
 // VIC priorities
 // -----------------------
-#define TIMER2_SLOT		   8		// Indar: similar to TIMER2_PRIORITY, which must be > 7, according to current spin1_api.h
+#define TIMER2_SLOT		   8		// Indar: similar to TIMER2_PRIORITY, which must
+									// be > 7, according to current spin1_api.h
 //void update_VIC (void);
 void setupTimer2(uint periodT2, callback_t cback);
-void reset_timer2(uint _time);		// Indar: add this
+void reset_timer2(uint _time);		// Indar: add this for convenience
 void terminate_timer2 (void);
 INT_HANDLER isr_for_timer2 ();
 
 static uint timer2_tick;			// Indar: add this, will be used internally
 static uint ticks2;					// This will apparent to user, not timer2_tick
 static uint timer_tick;  	        // timer tick period
-uint iLoad;							// helper variable, to load the counter
 callback_t cbackTimer2;				// callback for timer-2
 /*---------------------------- regarding Timer 2 --------------------------------*/
 /*-------------------------------------------------------------------------------*/
 
 
 //#define REPORT_TIMER_TICK_PERIOD_US	1000000	// to get 1s resolution in FREQ_REF_200MHZ
-#define REPORT_TIMER_TICK_PERIOD_US	100000	// to get 0.1s resolution in FREQ_REF_200MHZ
 #define FREQ_REF_200MHZ				200
 
 // related with frequency scalling
@@ -147,29 +148,38 @@ sdp_msg_t debugMsg;							// will be sent via SDP_IPTAG_GENERIC
 uint tempVal[3];							// there are 3 sensors in each chip
 uint cpuIdleCntr[18];						// for all cpus
 uint myOwnIdleCntr;							// since my flag in r25 is alway on, it gives me ALWAYS zero counts
+uint avgCPUidle;							// TODO: how to measure it?
 
-// PLL and frequency related:
+// PLL and frequency related (for internal purpose):
 uint _r20, _r21, _r24;						// the original value of r20, r21, and r24
 uint r20, r21, r24, r25;					// the current value of r20, r21 and r24 during *this* experiment
 uint _freq;									// ref/original frequency
-volatile uint _idleCntr;
-/*-------------------------------------------------------------------------------------------*/
 
-// function prototypes
+
+/*----------------------------------------------------------------*/
+/*----------------------------------------------------------------*/
+/*----------------------------------------------------------------*/
+/*----------------------------------------------------------------*/
+/*----------------------------------------------------------------*/
+/*---------------------- function prototypes ---------------------*/
+// temperature-related
 void readTemp();
 
+// frequency-related
 void getFreqParams(uint f, uint *ms, uint *ns);
 void changeFreq(uint f, uint replyCode);					// we use uchar to limit the frequency to 255
 void changePLL(uint flag);
 uint readSpinFreqVal();
 
+// cpu-utilisation related
 void idle(uint arg0, uint arg1);
 void disableCPU(uint virtCoreID, uint none);
 void enableCPU(uint virtCoreID, uint none);
+void computeAvgCPUidle();
 
 // initProfiler will set timer-2 and PLL
-void initProfiler();
-void terminateProfiler();
+void initProfiler();		// mainly for changing PLL-2
+void terminateProfiler();	// and for restoring PLL-2
 
 #endif // PROFILER_H
 

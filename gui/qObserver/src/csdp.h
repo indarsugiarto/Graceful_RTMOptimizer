@@ -3,6 +3,9 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QDataStream>
+
+#include "spinq.h"
 
 class cSDP : public QObject
 {
@@ -14,10 +17,17 @@ public:
 signals:
 
 public slots:
-	void readReport();
+	void readQReport();
+	void readMReport();
 
 private:
-	QUdpSocket *sdpReport;
+	QUdpSocket *sdpQReport;	// Q-table
+	QByteArray baQReport;
+	QDataStream dsQReport;
+
+	QUdpSocket *sdpMReport;	// Measurement
+	QByteArray baMReport;
+	QDataStream dsMReport;
 };
 
 #endif // CSDP_H

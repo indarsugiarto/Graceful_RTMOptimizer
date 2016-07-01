@@ -2,18 +2,6 @@
 #include "ui_qtester.h"
 #include <QHostAddress>
 
-#define N_FREQ_ITEM			25	// from 10 to 250
-#define N_STATES			N_FREQ_ITEM
-#define SDP_CMD_SET_FREQ	0xf2e0
-#define SDP_CMD_GOTO_STATE	0x6070
-#define SDP_PORT_CONFIG		7
-#define SDP_PORT_CMD		6
-
-uchar QTester::X_CHIPS[48] = {0,1,0,1,2,3,4,2,3,4,5,0,1,2,3,4,5,6,0,1,2,3,4,5,
-							  6,7,1,2,3,4,5,6,7,2,3,4,5,6,7,3,4,5,6,7,4,5,6,7};
-uchar QTester::Y_CHIPS[48] = {0,0,1,1,0,0,0,1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,
-							  3,3,4,4,4,4,4,4,4,5,5,5,5,5,5,6,6,6,6,6,7,7,7,7};
-
 QTester::QTester(QWidget *parent) :
 	QWidget(parent),
 	ui(new Ui::QTester)
@@ -21,7 +9,7 @@ QTester::QTester(QWidget *parent) :
 	ui->setupUi(this);
 	QStringList sList, fList;
 	for(int row=0; row<N_STATES; row++) {
-		fList.append(QString("%1").arg((row+1)*10));
+		fList.append(QString("%1").arg(100+(row*10)));
 		for(int col=0; col<N_STATES; col++)
 			sList.append(QString("[%1,%2]").arg(row).arg(col));
 	}
@@ -65,7 +53,7 @@ void QTester::pbGoClicked()
 	h.srce_addr = 0;
 	h.srce_port = 255;
 	h.dest_addr = (x << 8) + y;
-	h.dest_port = (SDP_PORT_CMD << 5) + ui->sbCore->value();
+	h.dest_port = (SDP_CMD_PORT << 5) + ui->sbCore->value();
 	cmd_hdr_t c;
 	c.cmd_rc = SDP_CMD_SET_FREQ;
 	c.seq = f;

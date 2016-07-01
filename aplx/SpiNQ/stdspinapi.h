@@ -27,8 +27,13 @@
 #define SDP_HOST_IP				0x02F0A8C0	// 192.168.240.2, dibalik!
 
 #define SDP_CONFIG_PORT			7		// port-7 has a special purpose, usually related with ETH
+#define SDP_CMD_PORT			6
 
 #define SDP_TIMEOUT				10		// as recommended
+
+#define SDP_CMD_SET_FREQ		0xf2e0
+#define SDP_CMD_GOTO_STATE		0x6070
+#define SDP_CMD_SEND_CPU_MAP	0xaaaa
 
 sdp_msg_t reportMsg;			// for sending Q-table
 sdp_msg_t genericMsg;			// for sending measurement

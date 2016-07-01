@@ -21,18 +21,6 @@
 #define	N_STATES					N_FREQ_ITEM
 #define N_ACTION					3
 
-// Q-table contains basically integer values
-/*
-typedef struct StAct
-{
-	int Qval;
-    //int action[N_STATES];
-    int action[3];
-} StAct_t;
-
-StAct_t Q[N_STATES][N_STATES];
-*/
-
 typedef enum {DOWN, STAY, UP} act_t;
 
 typedef struct st
@@ -46,25 +34,39 @@ static uint Q[N_STATES][N_STATES] = {0};
 uchar currentState[2];
 
 // state parameters/measurements
+uint CPUperf;				// CPU performance, how to measure it?
 uint currentFreq;
 uint currentTempInt;
 REAL currentTempReal;
-uint rewardVal;
+uint currentRewardVal;
+// the following will be collected from profiler:
+// uint tempVal[3];
+// uint cpuIdleCntr[18];
+// uint avgCPUidle;
 
+// these will control how Q-learning operates:
+uchar isRunning;			// set this value to run or pause Q-learning
+uchar isLearning;			// set this value to explore or exploit
 
-// forward declarations
+// the main function that runs Q-learning
+void runQ();
+
+// other forward declarations - will be in SpiNQ.c
 // int maxQVal(StAct_t s);		// get the maximum Q-value at state-s
+void initQ();
 void maxQVal(short maxVal[N_ACTION], uchar xQ, uchar yQ);
-void updateQ(uint state, uint action);
+void updateQ();
 short getReward();
 
-// misc functions
-void initStates();
+// misc functions - will be implemented in SpiNQ.c
 void collectMeasurement();
-uint computeReward();
-void updateReport(uint arg0, uint arg1);
+void computeReward();
+void computeCPUperf();
+void sendMReport();
+void sendQReport();
+void sendCPUmapReport();
 
-// helper functins
+// helper functins - will be implemented in util.c
 REAL getRealTemp();				// get a "Real" temperature in Celcius
 void readPLL(char *stream);
 

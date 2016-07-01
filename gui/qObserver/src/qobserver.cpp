@@ -8,6 +8,10 @@ qObserver::qObserver(QWidget *parent) :
 	setupUi();
 	qTesterWidget.show();
 	qTesterWidget.setGeometry(x()+width()+5, y(), qTesterWidget.width(), qTesterWidget.height());
+	Tplot = new Plotter("Chip Temperature");
+	Tplot->show();
+	Fplot = new Plotter("Cores Clock Frequency");
+	Fplot->show();
 }
 
 qObserver::~qObserver()
@@ -19,6 +23,10 @@ void qObserver::closeEvent(QCloseEvent *e)
 {
 	if(qTesterWidget.isVisible())
 		qTesterWidget.close();
+	if(Tplot->isVisible())
+		Tplot->close();
+	if(Fplot->isVisible())
+		Fplot->close();
 	e->accept();
 }
 

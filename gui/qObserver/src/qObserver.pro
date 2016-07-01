@@ -15,11 +15,17 @@ TEMPLATE = app
 SOURCES += main.cpp\
         qobserver.cpp \
     csdp.cpp \
-    qtester.cpp
+    qtester.cpp \
+    plotter.cpp
 
 HEADERS  += qobserver.h \
     csdp.h \
-    qtester.h
+    qtester.h \
+    plotter.h \
+    spinq.h
 
 FORMS += \
-    qtester.ui
+    qtester.ui \
+    plotter.ui
+
+LIBS += -lqwt

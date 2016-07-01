@@ -6,9 +6,9 @@
 #include <QLabel>
 #include <QCloseEvent>
 
+#include "spinq.h"
 #include "qtester.h"
-
-#define N_STATES	16
+#include "plotter.h"
 
 namespace Ui {
 class qObserver;
@@ -29,6 +29,8 @@ private:
 	QLabel lTemp, lFreq, lCPU, lPerf, lRewd;
 
 	QTester qTesterWidget;
+	Plotter *Tplot;
+	Plotter *Fplot;
 
 protected:
 	void closeEvent(QCloseEvent *e);
