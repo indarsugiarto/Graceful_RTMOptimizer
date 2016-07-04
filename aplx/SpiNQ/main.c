@@ -11,6 +11,7 @@ void c_main()
     initCallback();
 	initTimer();
 	initProfiler();
+	initQ();
 
 	// greetings
     io_printf(IO_STD, "[SpiNQ-v%d.%d] running @ core-%d id-%d\n",

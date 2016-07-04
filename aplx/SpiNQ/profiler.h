@@ -11,6 +11,12 @@
  */
 #include <spin1_api.h>
 #include "stdspinapi.h"
+#include <stdfix.h>
+
+#ifndef REAL
+#define REAL						accum
+#define REAL_CONST(x)				(x##k)
+#endif
 
 /*-------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------*/
@@ -149,6 +155,7 @@ uint tempVal[3];							// there are 3 sensors in each chip
 uint cpuIdleCntr[18];						// for all cpus
 uint myOwnIdleCntr;							// since my flag in r25 is alway on, it gives me ALWAYS zero counts
 uint avgCPUidle;							// TODO: how to measure it?
+float avgCPUload;							// average CPU load / utilization
 
 // PLL and frequency related (for internal purpose):
 uint _r20, _r21, _r24;						// the original value of r20, r21, and r24
@@ -180,6 +187,17 @@ void computeAvgCPUidle();
 // initProfiler will set timer-2 and PLL
 void initProfiler();		// mainly for changing PLL-2
 void terminateProfiler();	// and for restoring PLL-2
+
+// the following values are based on manual experiment
+typedef struct idle_cntr
+{
+	uint freq;
+	uint cntr;
+} idle_cntr_t;
+// lnMemTable is used in the profiler.h
+idle_cntr_t idle_cntr_table[lnMemTable];
+void buildIdleCntrTable();
+uint getMaxCntrFromFreq(uint freq);
 
 #endif // PROFILER_H
 

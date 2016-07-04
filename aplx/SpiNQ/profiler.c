@@ -2,6 +2,33 @@
 
 extern uint currentFreq;
 
+/*-------------- The following is from manual experiment ---------------*/
+// Note: problem is, this values are affected by temperature as well!!!
+// TODO: update the value with new regression method!!!
+void buildIdleCntrTable()
+{
+	ushort idx = 0;
+	for(ushort f=10; f<=255; f++) {
+		idle_cntr_table[idx].freq = f;
+		idle_cntr_table[idx].cntr = 180000;	// Note: THIS SHOULD BE UPDATED!!!
+	}
+	idx++;
+}
+uint getMaxCntrFromFreq(uint f)
+{
+	uint result;
+	for(ushort i=0; i<lnMemTable; i++) {
+		if(idle_cntr_table[i].freq == f) {
+			result = idle_cntr_table[i].cntr;
+			break;
+		}
+	}
+	// NOTE: there's something wrong with idle_cntr_table!!!
+	result = 180000;
+	//io_printf(IO_STD, "f=%u, result = %u\n", f, result);
+	return result;
+}
+
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
 /*----------------------------------------------------------------------*/
@@ -10,6 +37,8 @@ extern uint currentFreq;
 // initProfiler: use Timer-2 and change PLL
 void initProfiler()
 {
+	buildIdleCntrTable();
+
 	// get the original PLL configuration and current frequency
 	// usually, we got these values (so, it can be an reference value):
 	// _r20 = 0x70128
@@ -145,6 +174,18 @@ void computeAvgCPUidle()
 		}
 	}
 	avgCPUidle = totalCntr / cntr;
+	uint f = readSpinFreqVal();
+	//float mxCntr = (float)getMaxCntrFromFreq(currentFreq);
+	uint halfmxCntr = getMaxCntrFromFreq(f) / 2;
+	uint diffr = halfmxCntr - avgCPUidle/2;
+	avgCPUload = (float)diffr / (float)halfmxCntr;
+	avgCPUload *= 100.0;
+
+	/*
+	io_printf(IO_STD, "f=%u, mxCntr=%u, avgCPUidle=%u, halfmxCntr=%u, diffr=%u, avgCPUload=%k\n",
+					  f, getMaxCntrFromFreq(f), avgCPUidle, halfmxCntr, diffr, (REAL)avgCPUload);
+	*/
+
 	// then reset counter
 	for(uchar cpu=0; cpu<18; cpu++)
 		cpuIdleCntr[cpu] = 0;
@@ -204,6 +245,9 @@ void changeFreq(uint f)
 	sc[SC_PLL1] = r20;			// change the value of r20 with the new parameters
 
 	//_freq = f;					// the actual frequency (sark may report differently)
+
+	// Do we need to change timer-2 behavior? YESSS!!!!
+	reset_timer2(timer2_tick);
 }
 
 /* SYNOPSIS
@@ -324,6 +368,7 @@ void setupTimer2(uint periodT2, callback_t cback)
 	sark_vic_set (TIMER2_SLOT, TIMER2_INT, 1, isr_for_timer2);
 	tc[T2_CONTROL] = 0xe2;				// Set up count-down mode
 	reset_timer2(periodT2);				// load the counter circuit with value
+	timer2_tick = periodT2;
 }
 
 // reset_timer2() can be used to force timer-2 to start from different value
